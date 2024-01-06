@@ -111,7 +111,9 @@ def plot_all_numerical(df):
         plt.title(f'{feature} by loan_status')
         plt.show()
 
-
+def convert_to_numeric(df, features):
+    for feature in features:
+        df[feature] = pd.to_numeric(df[feature].str.rstrip('%'), errors='coerce')
 
 
 
