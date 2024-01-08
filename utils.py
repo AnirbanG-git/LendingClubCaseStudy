@@ -488,3 +488,20 @@ def bucketize(df, feature, bins, labels):
 
     # Create a new column for the feature category
     df[feature + '_category'] = pd.cut(df[feature], bins=bins, labels=labels, include_lowest=True)
+
+def get_iqr(df, feature):
+    Q1 = df[feature].quantile(0.25)
+    Q3 = df[feature].quantile(0.75)
+    IQR = Q3 - Q1
+
+    return Q1, Q3, IQR
+
+def get_outlier_bounds(df, feature):
+    Q1, Q3, IQR = get_iqr(df, feature)
+    lower_bound = Q3 - 1.5 * IQR
+    upper_bound = Q3 + 1.5 * IQR
+
+    print(f"The lower(Q3 - 1.5 * IQR) outlier bound for {feature} is: {lower_bound}")
+    print(f"The upper(Q3 + 1.5 * IQR) outlier bound for {feature} is: {upper_bound}")
+
+    return lower_bound, upper_bound
