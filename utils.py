@@ -110,10 +110,6 @@ def plot_categorical(df, feature):
     plt.xticks(rotation=45)
     plt.show()
 
-import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
-
 def plot_numerical_univariate(df, feature, feature_label=""):
     if not feature_label:
         feature_label = feature
@@ -141,7 +137,7 @@ def plot_numerical_univariate(df, feature, feature_label=""):
     print("="*40)
 
     # Initialize the subplot
-    fig, axs = plt.subplots(nrows=1, ncols=3, figsize=(20, 6))
+    fig, axs = plt.subplots(nrows=3, ncols=1, figsize=(20, 15))
 
     # Histogram
     sns.histplot(df[feature], bins=30, kde=True, ax=axs[0])
@@ -175,6 +171,7 @@ def plot_numerical_bivariate(df, feature, target_feature, feature_label="", targ
     axs.set_xlabel(target_label)
     plt.show()
 
+
 def plot_categorical_univariate(df, feature, feature_label="", top_20=False):
     if not feature_label:
         feature_label = feature
@@ -196,7 +193,7 @@ def plot_categorical_univariate(df, feature, feature_label="", top_20=False):
         proportions = value_counts / len(df)
     
     # Initialize the subplot
-    fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(20, 6))
+    fig, axs = plt.subplots(nrows=2, ncols=1, figsize=(20, 12))
     
     # Bar plot for the frequency of each category
     sns.countplot(x=feature, data=df, ax=axs[0], order=value_counts.index)
@@ -211,6 +208,7 @@ def plot_categorical_univariate(df, feature, feature_label="", top_20=False):
     axs[1].set_ylabel('')  # Hide the y-axis label for the pie chart
     axs[1].axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
     
+    plt.tight_layout()
     plt.show()
 
 def plot_categorical_bivariate(df, feature, target_feature, feature_label="", target_label="", top_20=False):
@@ -231,7 +229,7 @@ def plot_categorical_bivariate(df, feature, target_feature, feature_label="", ta
     crosstab_percent = crosstab_count.div(crosstab_count.sum(axis=1), axis=0) * 100
 
     # Initialize the subplot
-    fig, axs = plt.subplots(nrows=1, ncols=3, figsize=(30, 8))
+    fig, axs = plt.subplots(nrows=3, ncols=1, figsize=(20, 20))
 
     # Count plot for the feature
     sns.countplot(x=feature, hue=target_feature, data=df, ax=axs[0], order=top_categories if top_20 else None)
@@ -252,10 +250,10 @@ def plot_categorical_bivariate(df, feature, target_feature, feature_label="", ta
     for rect in axs[1].patches:
         height = rect.get_height()
         x = rect.get_x() + rect.get_width() / 2
-        y = rect.get_y() + height / 2
+        y = rect.get_y() + height
         label_text = f'{height:.1f}%'
         if height > 0:  # Only add text if there's room
-            axs[1].text(x, y, label_text, ha='center', va='center', fontsize=8, color='white')
+            axs[1].text(x, y, label_text, ha='center', va='bottom', fontsize=8, color='black')
 
     # Heat map for the crosstab
     sns.heatmap(crosstab_count, annot=True, fmt='d', cmap='Blues', ax=axs[2])
@@ -263,9 +261,9 @@ def plot_categorical_bivariate(df, feature, target_feature, feature_label="", ta
     axs[2].set_xlabel(target_label)
     axs[2].set_ylabel(feature_label)
 
+    # Ensure the layout is tight so plots don't overlap
     plt.tight_layout()
     plt.show()
-
 
 def cap_outliers(df, feature):
     # Calculate the IQR
@@ -393,3 +391,11 @@ def bivariate_date_analysis(df, date_feature, target_feature):
     # Adjust the layout
     plt.tight_layout()
     plt.show()
+
+def bucketize(df, feature, bins, labels):
+    # Check if the length of bins is one more than the length of labels
+    if len(bins) != len(labels) + 1:
+        raise ValueError("The number of bins must be exactly one more than the number of labels.")
+
+    # Create a new column for the feature category
+    df[feature + '_category'] = pd.cut(df[feature], bins=bins, labels=labels, include_lowest=True)
