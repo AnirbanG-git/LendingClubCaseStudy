@@ -1,4 +1,4 @@
-# Project Name
+# Lending Club Case Study
 > The project entails analyzing loan data to identify patterns predicting loan default, crucial for making informed loan approval decisions. The EDA approach helps in understanding how various consumer and loan attributes correlate with the likelihood of default. The aim is to minimize credit losses by identifying risky loan applicants, using insights to adjust lending strategies and enhance risk assessment. This case study serves as an application of EDA techniques in real-world financial scenarios, offering insights into the domain of risk analytics.
 
 
