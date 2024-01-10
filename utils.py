@@ -12,6 +12,9 @@ import warnings
 
 warnings.filterwarnings('ignore')
 
+class IncorrectDateFormatError(Exception):
+    pass
+
 def print_null_stats_for_features(df, features):
     for feature in features:
         print(f"null stats for {feature} \n")
@@ -438,7 +441,7 @@ def report_incorrect_date_informat(date_str):
     except (pd._libs.tslibs.np_datetime.OutOfBoundsDatetime, ValueError):
         # If the date is incorrect, append it to the list for reporting
         print(f"Incorrect entry: {date_str}")
-        return date_str
+        raise IncorrectDateFormatError(f"Incorrect entry: {date_str}")
 
 def handle_incorrect_date_format(date_str):
     try:

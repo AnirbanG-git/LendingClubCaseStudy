@@ -61,9 +61,10 @@ The analysis utilizes a dataset containing historical loan application data. It 
     - Consider home ownership status as a moderate risk factor, especially for 'Others' category.
 - **Public Record Scrutiny:** 
     - Pay special attention to borrowers with derogatory public records or bankruptcies, as they significantly increase default likelihood.
+- **Rising Loan Volume:** 
+    - Prepare for a substantial increase in loan applications, necessitating enhanced management and processing capabilities.    
 - **Data-Driven Lending Decisions:** 
     - Utilize the insights from the analysis, such as the importance of loan term, grade, zip code, state, and bankruptcy records, to make more informed lending decisions.
-
 <!-- You don't have to answer all the questions - just the ones relevant to your project. -->
 
 
