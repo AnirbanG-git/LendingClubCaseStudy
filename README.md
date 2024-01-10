@@ -12,13 +12,13 @@
 <!-- You can include any other section that is pertinent to your problem -->
 
 ## General Information
-* Background
+### Background
 This project is an Exploratory Data Analysis (EDA) case study in the banking and financial services sector, focusing on risk analytics. The primary goal is to apply EDA techniques to understand the driver variables for behind loan default, and mitigate the risks associated with lending loans.
 
-* Business Problem
+### Business Problem
 The project addresses a key challenge for a consumer finance company specializing in various types of loans. The core issue is managing the risk of credit loss, which occurs when borrowers default on their loans. The project aims to identify high-risk loan applicants to make informed decisions on loan approvals, potentially reducing financial losses.
 
-* Dataset Used
+### Dataset Used
 The analysis utilizes a dataset containing historical loan application data. It includes detailed information about past loan applicants, such as loan amount, term, interest rate, employment length, home ownership status, annual income, and whether they defaulted (charged-off) or not. The initial dataset comprised 39,717 rows and 111 columns, which was cleaned and preprocessed to 36,789 rows and 28 columns. The cleaned dataset was then used for various analytical techniques to identify patterns indicating the likelihood of loan default.
 
 
@@ -44,25 +44,25 @@ The analysis utilizes a dataset containing historical loan application data. It 
 - Strong predictive insights were gleaned from analyzing loan term, grade, zip code, state, and public record bankruptcies, with data transformations enhancing predictive accuracy.
 
 ## Recommendations
-- Implement Risk-Based Pricing: 
+- **Implement Risk-Based Pricing:** 
     - Adjust interest rates based on loan amount categories, especially for higher-risk 'Medium-High' and 'Very High' loans.
-- Loan Term Strategy: 
+- **Loan Term Strategy:**
     - Promote 36-month loans more aggressively due to their lower default rates compared to 60-month loans.
-- Interest Rate Monitoring: 
+- **Interest Rate Monitoring:** 
     - Apply stricter scrutiny for loans with interest rates above 12%, and consider additional risk mitigation for rates above 14.4%.
-- Installment Payment Analysis: 
+- **Installment Payment Analysis:** 
     - Monitor loans with higher installment payments, particularly those exceeding $820, for potential default risks.
-- Grade-Based Lending Policies: 
+- **Grade-Based Lending Policies:** 
     - Exercise caution with loans categorized as 'F' and 'G' grades, given their higher propensity to default.
-- Employment and Income Verification: 
+- **Employment and Income Verification:** 
     - Strengthen verification processes for employment length and annual income, especially for borrowers in lower income brackets.
-- Geographic Risk Management: 
+- **Geographic Risk Management:**
     - Develop region-specific lending strategies focusing on areas with higher default rates, such as Florida, Missouri, and California.
-- Home Ownership Evaluation: 
+- **Home Ownership Evaluation:** 
     - Consider home ownership status as a moderate risk factor, especially for 'Others' category.
-- Public Record Scrutiny: 
+- **Public Record Scrutiny:** 
     - Pay special attention to borrowers with derogatory public records or bankruptcies, as they significantly increase default likelihood.
-- Data-Driven Lending Decisions: 
+- **Data-Driven Lending Decisions:** 
     - Utilize the insights from the analysis, such as the importance of loan term, grade, zip code, state, and bankruptcy records, to make more informed lending decisions.
 
 <!-- You don't have to answer all the questions - just the ones relevant to your project. -->
