@@ -632,15 +632,8 @@ def get_std_bounds(df, feature):
     lower_bound = mean - 3 * std
     return lower_bound, upper_bound
 
+# Analyzes and transforms a feature in a DataFrame using log transformation, z-score normalization, box-cox, or yeo-johnson transformation.
 def analyze_and_transform_feature(df, feature, transformation_type='log'):
-    """
-    Analyzes and transforms a feature in a DataFrame using log transformation, z-score normalization, box-cox, or yeo-johnson transformation.
-
-    Parameters:
-    df (pd.DataFrame): DataFrame containing the data.
-    feature (str): The name of the feature/column to be analyzed and transformed.
-    transformation_type (str): Type of transformation: 'log', 'z-score', 'box-cox', or 'yeo-johnson'.
-    """
 
     # Debug statement
     print("Starting analysis and transformation for feature:", feature)
