@@ -4,10 +4,24 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import datetime as dt
 from matplotlib.table import Table
+from scipy.stats import boxcox, yeojohnson
+from IPython.display import display
+from datetime import datetime
 
 import warnings
 
 warnings.filterwarnings('ignore')
+
+def print_null_stats_for_features(df, features):
+    for feature in features:
+        print(f"null stats for {feature} \n")
+        null_counts = df[features].isnull().sum()
+        null_percentage = round((df.isnull().sum() / df.shape[0]) * 100, 2)
+        null_summary = pd.DataFrame({'Count': null_counts, 'Percentage': null_percentage})
+        print(null_counts)
+        print(null_percentage)
+        print(null_summary)
+
 
 # This function calculates the count and percentage of null values in each column of a DataFrame.
 # It returns these statistics both separately and combined in a summary DataFrame.
@@ -35,6 +49,8 @@ def print_null_stats(df):
 def drop_high_null_cols(df, null_percentage):
     # Identify columns where the percentage of null values is greater than 60%
     columns_to_drop = null_percentage[null_percentage > 60].index
+
+    print(f"Dropping following features - {columns_to_drop}")
 
     # Drop these columns from the DataFrame
     df.drop(columns=columns_to_drop, inplace=True)
@@ -179,38 +195,41 @@ def plot_numerical_univariate(df, feature, feature_label=""):
     plt.tight_layout()
     plt.show()
 
+    df.drop([binned_feature], axis=1, inplace=True)
+
 # This function visualizes the relationship between a numerical and a categorical column using box and violin plots.
 # It is useful for exploring how a numerical feature varies with different categories of a target feature.
 def plot_numerical_bivariate(df, feature, target_feature, feature_label="", target_label=""):
     if not feature_label:
         feature_label = feature
     if not target_label:
-        target_label = target_feature
+        target_label = target_feature   
     
     # Define a custom color palette
     # The colors correspond to the default Seaborn color palette
-    default_colors = sns.color_palette()  # Get the default color palette
-    category_colors = {"Fully Paid": default_colors[0], "Charged Off": default_colors[1]}
+    color_mapping = {df[target_feature].unique()[0]: "#FF7F0F", df[target_feature].unique()[1]: "#3274A1"}
 
     # Initialize the subplot with 2 rows and 1 column
     fig, axs = plt.subplots(nrows=2, ncols=1, figsize=(20, 8))
 
     # Boxplot
     sns.boxplot(x=target_feature, y=feature, data=df, ax=axs[0], 
-                palette=[category_colors.get(x, "#333333") for x in df[target_feature].unique()])
+                palette=[color_mapping.get(x, "#333333") for x in df[target_feature].unique()])
     axs[0].set_title(f'Box Plot of {feature_label} by {target_label}')
     axs[0].set_ylabel(feature_label)
     axs[0].set_xlabel(target_label)
 
     # Violin plot
     sns.violinplot(x=target_feature, y=feature, data=df, ax=axs[1], 
-                   palette=[category_colors.get(x, "#333333") for x in df[target_feature].unique()])
+                   palette=[color_mapping.get(x, "#333333") for x in df[target_feature].unique()])
     axs[1].set_title(f'Violin Plot of {feature_label} by {target_label}')
     axs[1].set_ylabel(feature_label)
     axs[1].set_xlabel(target_label)
 
     plt.tight_layout()
     plt.show()
+
+
 
 # This function visualizes the distribution of a categorical column using bar and pie charts.
 # It includes options for focusing on the top 20 categories and annotating the plots with percentages.
@@ -278,7 +297,7 @@ def plot_categorical_univariate(df, feature, feature_label="", top_20=False):
 # This function creates visualizations to analyze the relationship between two categorical variables.
 # It includes count, stacked bar, and heatmap plots, with options for top categories and sorted views.
 def plot_categorical_bivariate(df, feature, target_feature, feature_label="", target_label="", 
-                               top_20=False, include_tables=False, sort_by=None):
+                               top_20=False, display_tables=False, sort_by=None, disply_ctab=False):
     if not feature_label:
         feature_label = feature
     if not target_label:
@@ -310,11 +329,11 @@ def plot_categorical_bivariate(df, feature, target_feature, feature_label="", ta
     color_mapping = {df[target_feature].unique()[0]: "#FF7F0F", df[target_feature].unique()[1]: "#3274A1"}
 
     # Determine the number of rows for the subplot
-    nrows = 3 if not include_tables else 5
+    nrows = 3 if not display_tables else 5
 
     # Initialize the subplot
     fig, axs = plt.subplots(nrows=nrows, ncols=1, figsize=(20, 5*nrows),
-                            gridspec_kw={'height_ratios': [2]*3 + [0.5]*2 if include_tables else [2]*3})
+                            gridspec_kw={'height_ratios': [2]*3 + [0.5]*2 if display_tables else [2]*3})
 
     # Count plot for the feature, sorted by sort_by count
     sns.countplot(x=feature, hue=target_feature, data=df_sorted_for_countplot, palette=color_mapping, ax=axs[0])
@@ -352,7 +371,7 @@ def plot_categorical_bivariate(df, feature, target_feature, feature_label="", ta
     axs[2].set_xlabel(target_label)
     axs[2].set_ylabel(feature_label)
 
-    if include_tables:
+    if display_tables:
         # Function to create a table
         def create_table(ax, data, title):
             ax.axis('tight')
@@ -379,20 +398,123 @@ def plot_categorical_bivariate(df, feature, target_feature, feature_label="", ta
     plt.tight_layout()
     plt.show()
 
+    # Display a crosstab in case disply_ctab flag is passed
+    if disply_ctab:
+        cm = sns.light_palette("#3274A1", as_cmap=True)
+        styled_crosstab = (round(crosstab_count.iloc[:-1, :-1].div(crosstab_count.iloc[:-1, -1], axis=0) * 100, 2)).style.background_gradient(cmap = cm)
+        display(styled_crosstab)  
+
+def plot_multivariate(df, feature_x, feature_y, feature_z, feature_x_label, feature_y_label, feature_z_label):
+    plt.figure(figsize=(20, 6))
+    sns.boxplot(x=feature_x, y=feature_y, hue=feature_z, data=df)
+    plt.title(f'{feature_y_label} by {feature_x_label} Status and {feature_z_label}')
+    plt.xticks(rotation=45)
+    plt.xlabel(feature_x_label)
+    plt.ylabel(feature_y_label)
+    plt.show()
+
+def plot_multivariate_categorical(df, feature_x, feature_y, feature_z, feature_x_label, feature_y_label, feature_z_label):
+    cross_tab = pd.crosstab(index=[df[feature_x], df[feature_z]], columns=df[feature_y], normalize='index')
+    cross_tab.plot(kind='bar', stacked=True, figsize=(20, 6))
+    plt.title(f'{feature_y_label} by {feature_x_label} and {feature_z_label}')
+    plt.xlabel(feature_x_label)
+    plt.ylabel('Proportion')
+    plt.legend(title=feature_y_label)
+    plt.show()
+
 # This function caps outliers in a numerical column based on the Interquartile Range (IQR) method.
 # It creates a new column in the DataFrame where values outside the IQR are capped at determined bounds.
 def cap_outliers(df, feature):
     # Calculate the IQR
-    Q1 = df[feature].quantile(0.25)
-    Q3 = df[feature].quantile(0.75)
-    IQR = Q3 - Q1
-
-    # Define the bounds for capping
-    lower_bound = Q1 - 1.5 * IQR
-    upper_bound = Q3 + 1.5 * IQR
+    lower_bound, upper_bound = get_iqr_bounds(df, feature)
 
     # Cap the outliers
     df[feature+ "_capped"] = df[feature].clip(lower=lower_bound, upper=upper_bound)
+
+def report_incorrect_date_informat(date_str):
+    try:
+        pd.to_datetime(date_str)  # Attempt to parse the date normally
+        return date_str  # Return the date if it is correct
+    except (pd._libs.tslibs.np_datetime.OutOfBoundsDatetime, ValueError):
+        # If the date is incorrect, append it to the list for reporting
+        print(f"Incorrect entry: {date_str}")
+        return date_str
+
+def handle_incorrect_date_format(date_str):
+    try:
+        return pd.to_datetime(date_str)  # Return None if the date is correct
+    except (pd._libs.tslibs.np_datetime.OutOfBoundsDatetime, ValueError):
+        corrected_date_str = correct_date_format(date_str)
+        if corrected_date_str:
+            return corrected_date_str
+        else:
+            print(f"Seeding None for {date_str}")
+            return None
+
+def correct_date_format(date_str):
+    if '-' in date_str:
+        parts = date_str.split('-')
+        month, year = parts[0], parts[1]
+
+        year = fix_year_format(year)
+
+        month = get_full_month_name(month)
+
+        return f'01-{month}-{year}'  # Reconstruct the date string with a default day (e.g., first of the month)
+    else:
+        return None  # If the format is not recognized, return None
+
+def fix_year_format(year):
+    if len(year) == 2:
+        return '20' + year if int(year) <= 22 else '19' + year
+    elif year.startswith('20') and int(year) > datetime.now().year:
+        return '19' + year[-2:]
+    else:
+        return year
+
+def get_full_month_name(month):
+    month_dict = {
+        'Jan': 'January',
+        'Feb': 'February',
+        'Mar': 'March',
+        'Apr': 'April',
+        'May': 'May',
+        'Jun': 'June',
+        'Jul': 'July',
+        'Aug': 'August',
+        'Sep': 'September',
+        'Oct': 'October',
+        'Nov': 'November',
+        'Dec': 'December'
+    }
+    return month_dict.get(month, month)  # Use the full month name if found in the dictionary, otherwise keep the original
+
+
+# Helper function to check if a given date is in the future relative to a specified year.
+def _is_future_date(date, validate_year):
+    return (date.year > validate_year) and (date.year // 100 == 20)
+
+# Corrects dates in the specified date column of the dataframe where the year starts with '20' and is greater than the current year or a specified year.
+def correct_future_dates(df, feature, validate_year=None):
+    validate_year = validate_year if validate_year is not None else datetime.now().year
+    df[feature] = pd.to_datetime(df[feature])
+
+    df.loc[df[feature].apply(lambda x: _is_future_date(x, validate_year)), feature] = \
+        df[feature].apply(lambda x: x.replace(year=x.year - 100) if _is_future_date(x, validate_year) else x)
+
+# Validates if any date in the specified date column of the dataframe is in the future relative to the current year or a specified year.
+# Prints the unique future years if found.
+def validate_future_years(df, feature, validate_year=None):
+    validate_year = validate_year if validate_year is not None else datetime.now().year
+    df[feature] = pd.to_datetime(df[feature])
+
+    future_dates = df[df[feature].apply(lambda x: _is_future_date(x, validate_year))]
+    
+    if not future_dates.empty:
+        unique_future_years = future_dates[feature].dt.year.unique()
+        print(f"{feature} : Unique future years found: {unique_future_years}")
+    else:
+        print(f"{feature} : No future dates found.")
 
 # This function generates new date-related features from a specified date column in a DataFrame.
 # It extracts components like year, month, quarter, etc., creating multiple new columns for detailed analysis.
@@ -496,12 +618,177 @@ def get_iqr(df, feature):
 
     return Q1, Q3, IQR
 
-def get_outlier_bounds(df, feature):
+def get_iqr_bounds(df, feature):
     Q1, Q3, IQR = get_iqr(df, feature)
-    lower_bound = Q3 - 1.5 * IQR
+    lower_bound = Q1 - 1.5 * IQR
     upper_bound = Q3 + 1.5 * IQR
 
-    print(f"The lower(Q3 - 1.5 * IQR) outlier bound for {feature} is: {lower_bound}")
-    print(f"The upper(Q3 + 1.5 * IQR) outlier bound for {feature} is: {upper_bound}")
-
     return lower_bound, upper_bound
+
+def get_std_bounds(df, feature):
+    mean = df[feature].mean()
+    std = df[feature].std()
+    upper_bound = mean + 3 * std
+    lower_bound = mean - 3 * std
+    return lower_bound, upper_bound
+
+def analyze_and_transform_feature(df, feature, transformation_type='log'):
+    """
+    Analyzes and transforms a feature in a DataFrame using log transformation, z-score normalization, box-cox, or yeo-johnson transformation.
+
+    Parameters:
+    df (pd.DataFrame): DataFrame containing the data.
+    feature (str): The name of the feature/column to be analyzed and transformed.
+    transformation_type (str): Type of transformation: 'log', 'z-score', 'box-cox', or 'yeo-johnson'.
+    """
+
+    # Debug statement
+    print("Starting analysis and transformation for feature:", feature)
+
+    # Step 1: Plotting original data
+    print("Plotting original data...")
+    fig, ax = plt.subplots(1, 3, figsize=(15, 3))
+    sns.histplot(df[feature], kde=True, ax=ax[0])
+    ax[0].set_title('Histogram of ' + feature)
+    sns.boxplot(x=df[feature], ax=ax[1])
+    ax[1].set_title('Boxplot of ' + feature)
+    sns.violinplot(x=df[feature], ax=ax[2])
+    ax[2].set_title('Violin Plot of ' + feature)
+    plt.tight_layout()
+    plt.show()
+
+    # Step 2: Transformation
+    print(f"Performing {transformation_type} transformation...")
+    df_transformed = df.copy()
+    if transformation_type == 'log':
+        df_transformed[feature + "_log"] = np.log1p(df_transformed[feature])
+        transformed_feature = feature + "_log"
+    elif transformation_type == 'z-score':
+        df_transformed[feature + "_zscore"] = (df_transformed[feature] - df_transformed[feature].mean()) / df_transformed[feature].std()
+        transformed_feature = feature + "_zscore"
+    elif transformation_type == 'box-cox':
+        # Box-Cox transformation requires positive data
+        if df[feature].min() <= 0:
+            print(f"Box-Cox transformation not possible for '{feature}' as it contains non-positive values.")
+            return df
+        df_transformed[feature + "_boxcox"], _ = boxcox(df_transformed[feature])
+        transformed_feature = feature + "_boxcox"
+    elif transformation_type == 'yeo-johnson':
+        df_transformed[feature + "_yeojohnson"], _ = yeojohnson(df_transformed[feature])
+        transformed_feature = feature + "_yeojohnson"
+    else:
+        raise ValueError("Invalid transformation type. Choose 'log', 'z-score', 'box-cox', or 'yeo-johnson'.")
+
+    # Step 3: Plotting transformed data
+    print(f"Plotting {transformation_type} transformed data...")
+    fig, ax = plt.subplots(1, 3, figsize=(15, 3))
+    sns.histplot(df_transformed[transformed_feature], kde=True, ax=ax[0])
+    ax[0].set_title(f'Histogram of {transformed_feature}')
+    sns.boxplot(x=df_transformed[transformed_feature], ax=ax[1])
+    ax[1].set_title(f'Boxplot of {transformed_feature}')
+    sns.violinplot(x=df_transformed[transformed_feature], ax=ax[2])
+    ax[2].set_title(f'Violin Plot of {transformed_feature}')
+    plt.tight_layout()
+    plt.show()
+
+    # Debug statement
+    print(f"Analysis and {transformation_type} transformation complete for feature: {feature}")
+
+    return df_transformed
+
+# Drop rows that exceed 3 Standard Deviations in a column of the data
+def drop_std_outliers(df, feature):
+    lower_bound, upper_bound = get_std_bounds(df, feature)
+
+    # Counting the number of rows to be dropped
+    rows_to_drop = (df[feature] > upper_bound).sum()
+
+    # Dropping the rows
+    df = df[df[feature] <= upper_bound]
+
+    print(f"Dropping rows in '{feature}' exceeding 3 Standard Deviations Cutoff: {upper_bound}")
+    print(f"Number of rows dropped: {rows_to_drop}")
+
+    return df
+
+# Drop rows that fall outside the IQR bounds in a column of the data
+def drop_iqr_outliers(data, feature):
+    lower_bound, upper_bound = get_iqr_bounds(data, feature)
+
+    # Counting the number of rows to be dropped
+    rows_to_drop_lower = (data[feature] < lower_bound).sum()
+    rows_to_drop_upper = (data[feature] > upper_bound).sum()
+
+    # Dropping the rows
+    data = data[(data[feature] >= lower_bound) & (data[feature] <= upper_bound)]
+
+    print(f"Dropping rows in '{feature}' outside the IQR bounds: {lower_bound}, {upper_bound}")
+    print(f"Number of rows dropped below lower bound: {rows_to_drop_lower}")
+    print(f"Number of rows dropped above upper bound: {rows_to_drop_upper}")
+
+    return data
+
+# Visualize and optionally adjust outliers in a specified column of a DataFrame by dropping them.
+def visualize_and_adjust_outliers(data, feature, method=None, adjust_data=False):
+    # Helper function to plot the data
+    def plot_data(data, title):
+        plt.figure(figsize=(18, 6))
+
+        # Histogram
+        plt.subplot(1, 3, 1)
+        sns.histplot(data, kde=True)
+        plt.title(f'Histogram of {title}')
+        plt.xlabel(feature)
+        plt.ylabel('Frequency')
+
+        # Box Plot
+        plt.subplot(1, 3, 2)
+        sns.boxplot(x=data)
+        plt.title(f'Box Plot of {title}')
+        plt.xlabel(feature)
+
+        # Violin Plot
+        plt.subplot(1, 3, 3)
+        sns.violinplot(x=data)
+        plt.title(f'Violin Plot of {title}')
+        plt.xlabel(feature)
+
+        plt.tight_layout()
+        plt.show()
+
+    # Visualizing original data
+    print(f"Visualizing original data for '{feature}'...")
+    plot_data(data[feature], 'Original Data')
+
+    adjusted_data = data.copy()
+    if method == 'std':
+        print(f"Applying 3 Standard Deviations method to '{feature}'...")
+        adjusted_data = drop_std_outliers(adjusted_data, feature)
+        print("Visualizing data after applying 3 Standard Deviations method...")
+        plot_data(adjusted_data[feature], 'Data after 3 STD Method')
+
+    elif method == 'iqr':
+        print("Applying IQR method to '{feature}'...")
+        adjusted_data = drop_iqr_outliers(adjusted_data, feature)
+        print("Visualizing data after applying IQR method...")
+        plot_data(adjusted_data[feature], 'Data after IQR Method')
+
+    else:
+        # Visualizing with both methods but not transforming
+        print("Visualizing data with 3 Standard Deviations method...")
+        std_transformed_data = drop_std_outliers(data.copy(), feature)
+        plot_data(std_transformed_data[feature], 'Data after 3 STD Method (Visualization)')
+
+        print("Visualizing data with IQR method...")
+        iqr_transformed_data = drop_iqr_outliers(data.copy(), feature)
+        plot_data(iqr_transformed_data[feature], 'Data after IQR Method (Visualization)')
+
+    # Update the original data if required
+    if adjust_data:
+        data.drop(data.index, inplace=True)
+        data = pd.concat([data, adjusted_data], ignore_index=True)
+
+
+
+
+
